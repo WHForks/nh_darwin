@@ -32,15 +32,19 @@ assert use-nom -> nix-output-monitor != null; let
 
           buildInputs = lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.SystemConfiguration ];
 
-          postInstall = ''
-            wrapProgram $out/bin/nh \
-              --prefix PATH : ${lib.makeBinPath runtimeDeps}
-            mkdir completions
-            $out/bin/nh completions --shell bash > completions/nh.bash
-            $out/bin/nh completions --shell zsh > completions/nh.zsh
-            $out/bin/nh completions --shell fish > completions/nh.fish
-            installShellCompletion completions/*
-          '';
+          postInstall =
+            ''
+              wrapProgram $out/bin/nh \
+                --prefix PATH : ${lib.makeBinPath runtimeDeps}
+            ''
+            +
+              lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) # sh
+                ''
+                  installShellCompletion --cmd nh \
+                    --bash <("$out/bin/nh" completions --shell bash) \
+                    --zsh <("$out/bin/nh" completions --shell zsh) \
+                    --fish <("$out/bin/nh" completions --shell fish)
+                '';
 
           meta = {
             description = "Yet another nix cli helper";

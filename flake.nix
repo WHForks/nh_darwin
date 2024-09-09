@@ -49,14 +49,7 @@
             inherit crate2nix;
             rev = self.shortRev or self.dirtyShortRev or "dirty";
           };
-          nh_darwin = (pkgs.runCommand "${nh.pname}_darwin-${nh.version}"
-            {
-              outputs = [ "out" ];
-              inherit (nh) meta;
-            } ''
-            mkdir -p $out/bin
-            ln -s ${nh}/bin/nh $out/bin/nh_darwin
-          '');
+          nh_darwin = pkgs.callPackage ./alias.nix { nh = cfg.package; };
           default = nh;
         };
       };
